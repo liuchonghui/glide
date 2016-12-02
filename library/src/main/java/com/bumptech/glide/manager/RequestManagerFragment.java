@@ -7,9 +7,8 @@ import android.app.Fragment;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.util.Log;
-
 import com.bumptech.glide.RequestManager;
-
+import com.bumptech.glide.util.Synthetic;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -200,6 +199,7 @@ public class RequestManagerFragment extends Fragment {
 
   @Override
   public void onTrimMemory(int level) {
+    super.onTrimMemory(level);
     // If an activity is re-created, onTrimMemory may be called before a manager is ever put.
     // See #329.
     if (requestManager != null) {
@@ -209,6 +209,7 @@ public class RequestManagerFragment extends Fragment {
 
   @Override
   public void onLowMemory() {
+    super.onLowMemory();
     // If an activity is re-created, onLowMemory may be called before a manager is ever put.
     // See #329.
     if (requestManager != null) {
@@ -222,6 +223,10 @@ public class RequestManagerFragment extends Fragment {
   }
 
   private class FragmentRequestManagerTreeNode implements RequestManagerTreeNode {
+
+    @Synthetic
+    FragmentRequestManagerTreeNode() { }
+
     @Override
     public Set<RequestManager> getDescendants() {
       Set<RequestManagerFragment> descendantFragments = getDescendantRequestManagerFragments();

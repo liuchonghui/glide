@@ -3,7 +3,6 @@ package com.bumptech.glide;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
-
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.Engine;
 import com.bumptech.glide.load.engine.bitmap_recycle.ArrayPool;
@@ -265,6 +264,7 @@ public final class GlideBuilder {
     if (sourceExecutor == null) {
       sourceExecutor = GlideExecutor.newSourceExecutor();
     }
+
     if (diskCacheExecutor == null) {
       diskCacheExecutor = GlideExecutor.newDiskCacheExecutor();
     }
@@ -299,7 +299,8 @@ public final class GlideBuilder {
     }
 
     if (engine == null) {
-      engine = new Engine(memoryCache, diskCacheFactory, diskCacheExecutor, sourceExecutor);
+      engine = new Engine(memoryCache, diskCacheFactory, diskCacheExecutor, sourceExecutor,
+          GlideExecutor.newUnlimitedSourceExecutor());
     }
 
     return new Glide(

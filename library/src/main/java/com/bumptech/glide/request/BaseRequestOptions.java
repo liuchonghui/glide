@@ -7,7 +7,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.Key;
@@ -31,7 +30,6 @@ import com.bumptech.glide.load.resource.gif.StreamGifDecoder;
 import com.bumptech.glide.signature.EmptySignature;
 import com.bumptech.glide.util.Preconditions;
 import com.bumptech.glide.util.Util;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +62,7 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
   private static final int THEME = 1 << 15;
   private static final int TRANSFORMATION_ALLOWED = 1 << 16;
   private static final int TRANSFORMATION_REQUIRED = 1 << 17;
+  private static final int USE_UNLIMITED_SOURCE_GENERATORS_POOL = 1 << 18;
 
   private int fields;
 
@@ -89,6 +88,7 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
   private boolean isLocked;
   private Resources.Theme theme;
   private boolean isAutoCloneEnabled;
+  private boolean useUnlimitedSourceGeneratorsPool;
 
   /**
    * Applies a multiplier to the {@link com.bumptech.glide.request.target.Target}'s size before
@@ -110,6 +110,17 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
     }
     this.sizeMultiplier = sizeMultiplier;
     fields |= SIZE_MULTIPLIER;
+
+    return selfOrThrowIfLocked();
+  }
+
+  public final CHILD useUnlimitedSourceGeneratorsPool(boolean flag) {
+    if (isAutoCloneEnabled) {
+      return clone().useUnlimitedSourceGeneratorsPool(flag);
+    }
+
+    this.useUnlimitedSourceGeneratorsPool = flag;
+    fields |= USE_UNLIMITED_SOURCE_GENERATORS_POOL;
 
     return selfOrThrowIfLocked();
   }
@@ -352,7 +363,7 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
    * @param signature A unique non-null {@link com.bumptech.glide.load.Key} representing the current
    *                  state of the model that will be mixed in to the cache key.
    * @return This request builder.
-   * @see com.bumptech.glide.signature.StringSignature
+   * @see com.bumptech.glide.signature.ObjectKey
    */
   public final CHILD signature(@NonNull Key signature) {
     if (isAutoCloneEnabled) {
@@ -448,7 +459,7 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
    * <p>{@link DecodeFormat} is a request, not a requirement. It's possible the resource will be
    * decoded using a decoder that cannot control the format
    * ({@link android.media.MediaMetadataRetriever} for example), or that the decoder may choose to
-   * ignore the requested format if it can't display the image (ie RGB_565 is requested, but the
+   * ignore the requested format if it can't display the image (i.e. RGB_565 is requested, but the
    * image has alpha).
    */
   public CHILD format(@NonNull DecodeFormat format) {
@@ -754,6 +765,9 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
     if (isSet(other.fields, SIZE_MULTIPLIER)) {
       sizeMultiplier = other.sizeMultiplier;
     }
+    if (isSet(other.fields, USE_UNLIMITED_SOURCE_GENERATORS_POOL)) {
+      useUnlimitedSourceGeneratorsPool = other.useUnlimitedSourceGeneratorsPool;
+    }
     if (isSet(other.fields, DISK_CACHE_STRATEGY)) {
       diskCacheStrategy = other.diskCacheStrategy;
     }
@@ -941,5 +955,9 @@ public abstract class BaseRequestOptions<CHILD extends BaseRequestOptions<CHILD>
 
   private static boolean isSet(int fields, int flag) {
     return (fields & flag) != 0;
+  }
+
+  public final boolean getUseUnlimitedSourceGeneratorsPool() {
+    return useUnlimitedSourceGeneratorsPool;
   }
 }

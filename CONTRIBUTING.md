@@ -40,6 +40,7 @@ Labels on issues are managed by contributors, you don't have to worry about them
 *bug + enhancement: feature that doesn't work, but it's an edge case that either has a workaround or doesn't affect many users*
 
 
+[1]: https://github.com/bumptech/glide/issues/new?body=**Glide%20Version**%3A%0A**Integration%20libraries**%3A%0A**Device/Android%20Version**%3A%0A**Issue%20details%20/%20Repro%20steps%20/%20Use%20case%20background**%3A%0A%0A**Glide%20load%20line**%3A%0A%60%60%60java%0AGlide.with%28...%29.....load%28...%29.....into%28...%29%3B%0A%60%60%60%0A%0A**Layout%20XML**%3A%0A%60%60%60xml%0A%3C...Layout%3E%0A%20%20%20%20%3CImageView%20android%3AscaleType%3D%22...%22%20...%20/%3E%0A%3C/..Layout%3E%0A%60%60%60%0A%0A**Stack%20trace%20/%20LogCat**%3A%0A%60%60%60ruby%0Apaste%20stack%20trace%20here%0A%60%60%60
 [2]: https://groups.google.com/forum/#!forum/glidelibrary
 [3]: http://webchat.freenode.net/?channels=glide-library
 [4]: https://developers.google.com/open-source/cla/individual

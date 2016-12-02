@@ -1,14 +1,13 @@
 package com.bumptech.glide.manager;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.content.Context;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-
 import com.bumptech.glide.RequestManager;
-
+import com.bumptech.glide.util.Synthetic;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -150,8 +149,8 @@ public class SupportRequestManagerFragment extends Fragment {
   }
 
   @Override
-  public void onAttach(Activity activity) {
-    super.onAttach(activity);
+  public void onAttach(Context context) {
+    super.onAttach(context);
     try {
       registerFragmentWithRoot(getActivity());
     } catch (IllegalStateException e) {
@@ -204,6 +203,10 @@ public class SupportRequestManagerFragment extends Fragment {
   }
 
   private class SupportFragmentRequestManagerTreeNode implements RequestManagerTreeNode {
+
+    @Synthetic
+    SupportFragmentRequestManagerTreeNode() { }
+
     @Override
     public Set<RequestManager> getDescendants() {
       Set<SupportRequestManagerFragment> descendantFragments =

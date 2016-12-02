@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.RequestManager;
@@ -17,12 +16,13 @@ import com.bumptech.glide.gifdecoder.GifDecoder;
 import com.bumptech.glide.load.Key;
 import com.bumptech.glide.load.Transformation;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.bumptech.glide.util.Preconditions;
+import com.bumptech.glide.util.Synthetic;
 import com.bumptech.glide.util.Util;
-
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -34,7 +34,8 @@ class GifFrameLoader {
   private final Handler handler;
   private final Context context;
   private final List<FrameCallback> callbacks = new ArrayList<>();
-  private final RequestManager requestManager;
+  @Synthetic final RequestManager requestManager;
+  private final BitmapPool bitmapPool;
 
   private boolean isRunning = false;
   private boolean isLoadPending = false;
@@ -49,24 +50,40 @@ class GifFrameLoader {
     void onFrameReady();
   }
 
-  public GifFrameLoader(Context context, GifDecoder gifDecoder, int width, int height,
-      Transformation<Bitmap> transformation, Bitmap firstFrame) {
-    this(context,
-        Glide.with(context),
+  public GifFrameLoader(
+      Glide glide,
+      GifDecoder gifDecoder,
+      int width,
+      int height,
+      Transformation<Bitmap> transformation,
+      Bitmap firstFrame) {
+    this(
+        glide.getContext(),
+        glide.getBitmapPool(),
+        Glide.with(glide.getContext()),
         gifDecoder,
         null /*handler*/,
-        getRequestBuilder(context, width, height), transformation, firstFrame);
+        getRequestBuilder(Glide.with(glide.getContext()), width, height),
+        transformation,
+        firstFrame);
   }
 
   @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
-  GifFrameLoader(Context context, RequestManager requestManager, GifDecoder gifDecoder,
-      Handler handler, RequestBuilder<Bitmap> requestBuilder, Transformation<Bitmap> transformation,
+  GifFrameLoader(
+      Context context,
+      BitmapPool bitmapPool,
+      RequestManager requestManager,
+      GifDecoder gifDecoder,
+      Handler handler,
+      RequestBuilder<Bitmap> requestBuilder,
+      Transformation<Bitmap> transformation,
       Bitmap firstFrame) {
     this.requestManager = requestManager;
     if (handler == null) {
       handler = new Handler(Looper.getMainLooper(), new FrameLoaderCallback());
     }
     this.context = context;
+    this.bitmapPool = bitmapPool;
     this.handler = handler;
     this.requestBuilder = requestBuilder;
 
@@ -194,7 +211,7 @@ class GifFrameLoader {
 
   private void recycleFirstFrame() {
     if (firstFrame != null) {
-      Glide.get(context).getBitmapPool().put(firstFrame);
+      bitmapPool.put(firstFrame);
       firstFrame = null;
     }
   }
@@ -229,6 +246,9 @@ class GifFrameLoader {
     public static final int MSG_DELAY = 1;
     public static final int MSG_CLEAR = 2;
 
+    @Synthetic
+    FrameLoaderCallback() { }
+
     @Override
     public boolean handleMessage(Message msg) {
       if (msg.what == MSG_DELAY) {
@@ -246,7 +266,7 @@ class GifFrameLoader {
   // Visible for testing.
   static class DelayTarget extends SimpleTarget<Bitmap> {
     private final Handler handler;
-    private final int index;
+    @Synthetic final int index;
     private final long targetTime;
     private Bitmap resource;
 
@@ -268,9 +288,14 @@ class GifFrameLoader {
     }
   }
 
-  private static RequestBuilder<Bitmap> getRequestBuilder(Context context, int width, int height) {
-    return Glide.with(context).asBitmap().apply(
-        diskCacheStrategyOf(DiskCacheStrategy.NONE).skipMemoryCache(true).override(width, height));
+  private static RequestBuilder<Bitmap> getRequestBuilder(
+      RequestManager requestManager, int width, int height) {
+    return requestManager
+        .asBitmap()
+        .apply(
+            diskCacheStrategyOf(DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
+                .override(width, height));
   }
 
   // Visible for testing.

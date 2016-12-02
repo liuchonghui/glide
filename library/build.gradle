@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-apply plugin: 'org.robolectric'
 apply plugin: 'maven'
 apply plugin: 'findbugs'
 apply plugin: 'pmd'
@@ -34,6 +33,10 @@ dependencies {
 android.testOptions.unitTests.all {
     // configure max heap size of the test JVM
     maxHeapSize = '2048m'
+    if (JavaVersion.current() <= JavaVersion.VERSION_1_7) {
+        // Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=2048m; support was removed in 8.0
+        jvmArgs '-XX:MaxPermSize=2048m'
+    }
 }
 
 android {
@@ -107,9 +110,9 @@ afterEvaluate {
 
     check.dependsOn('pmd')
 
-    task jacocoTestReport(type: JacocoReport, dependsOn: testDebug) {
-        def coverageSourceDirs = ['src/main/java']
-        group = "Reporting"
+   task jacocoTestReport(type: JacocoReport, dependsOn: testDebugUnitTest) {
+       def coverageSourceDirs = ['src/main/java']
+       group = "Reporting"
         description = "Generate Jacoco coverage reports"
 
         classDirectories = fileTree(

@@ -1,5 +1,6 @@
 package com.bumptech.glide;
 
+import static com.bumptech.glide.tests.Util.cast;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -7,11 +8,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import android.graphics.Bitmap;
-
 import com.bumptech.glide.request.target.SizeReadyCallback;
 import com.bumptech.glide.request.target.Target;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,19 +27,11 @@ import org.mockito.verification.VerificationMode;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE, sdk = 18)
 public class ListPreloaderTest {
 
-  @Mock private RequestBuilder<Bitmap> request;
+  @Mock private RequestBuilder<Object> request;
   @Mock private RequestManager requestManager;
 
   @Before
@@ -71,8 +68,7 @@ public class ListPreloaderTest {
     }
 
     ListPreloaderAdapter preloaderAdapter = new ListPreloaderAdapter() {
-
-      public int expectedPosition;
+      private int expectedPosition;
 
       @Override
       public int[] getPreloadSize(Object item, int adapterPosition, int itemPosition) {
@@ -85,7 +81,8 @@ public class ListPreloaderTest {
       }
 
       @Override
-      public RequestBuilder<Bitmap> getPreloadRequestBuilder(Object item) {
+      @SuppressWarnings("unchecked")
+      public RequestBuilder<Object> getPreloadRequestBuilder(Object item) {
         assertEquals(objects.get(expectedPosition), item);
         expectedPosition++;
         return mock(RequestBuilder.class);
@@ -129,7 +126,7 @@ public class ListPreloaderTest {
     }
 
     ListPreloaderAdapter preloaderAdapter = new ListPreloaderAdapter() {
-      int expectedPosition = toPreload - 1;
+      private int expectedPosition = toPreload - 1;
 
       @Override
       public int[] getPreloadSize(Object item, int adapterPosition, int itemPosition) {
@@ -145,7 +142,8 @@ public class ListPreloaderTest {
       }
 
       @Override
-      public RequestBuilder<Bitmap> getPreloadRequestBuilder(Object item) {
+      @SuppressWarnings("unchecked")
+      public RequestBuilder<Object> getPreloadRequestBuilder(Object item) {
         assertEquals(objects.get(expectedPosition), item);
         expectedPosition--;
         return mock(RequestBuilder.class);
@@ -249,7 +247,7 @@ public class ListPreloaderTest {
     objects.add(new Object());
     objects.add(new Object());
     ListPreloaderAdapter preloaderAdapter = new ListPreloaderAdapter() {
-      public int expectedPosition = (1 + 10) * 2;
+      private int expectedPosition = (1 + 10) * 2;
 
       @Override
       public List<Object> getPreloadItems(int position) {
@@ -265,7 +263,7 @@ public class ListPreloaderTest {
       }
 
       @Override
-      public RequestBuilder getPreloadRequestBuilder(Object item) {
+      public RequestBuilder<Object> getPreloadRequestBuilder(Object item) {
         return request;
       }
     };
@@ -285,7 +283,7 @@ public class ListPreloaderTest {
     objects.add(new Object());
     objects.add(new Object());
     ListPreloaderAdapter preloaderAdapter = new ListPreloaderAdapter() {
-      int expectedPosition = objects.size() * 2 - 1;
+      private int expectedPosition = objects.size() * 2 - 1;
 
       @Override
       public List<Object> getPreloadItems(int position) {
@@ -301,7 +299,7 @@ public class ListPreloaderTest {
       }
 
       @Override
-      public RequestBuilder getPreloadRequestBuilder(Object item) {
+      public RequestBuilder<Object> getPreloadRequestBuilder(Object item) {
         return request;
       }
     };
@@ -316,12 +314,13 @@ public class ListPreloaderTest {
     assertEquals(expected, allValues);
   }
 
-  private List<Integer> getTargetsSizes(RequestBuilder<?> requestBuilder, VerificationMode mode) {
+  private <R> List<Integer> getTargetsSizes(
+      RequestBuilder<R> requestBuilder, VerificationMode mode) {
     ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
-    ArgumentCaptor<Target> targetArgumentCaptor = ArgumentCaptor.forClass(Target.class);
+    ArgumentCaptor<Target<R>> targetArgumentCaptor = cast(ArgumentCaptor.forClass(Target.class));
     SizeReadyCallback cb = mock(SizeReadyCallback.class);
     verify(requestBuilder, mode).into(targetArgumentCaptor.capture());
-    for (Target target : targetArgumentCaptor.getAllValues()) {
+    for (Target<R> target : targetArgumentCaptor.getAllValues()) {
       target.getSize(cb);
     }
     verify(cb, mode).onSizeReady(integerArgumentCaptor.capture(), integerArgumentCaptor.capture());
@@ -341,7 +340,7 @@ public class ListPreloaderTest {
       }
 
       @Override
-      public RequestBuilder getPreloadRequestBuilder(Object item) {
+      public RequestBuilder<Object> getPreloadRequestBuilder(Object item) {
         loadedObjects.add(item);
         return super.getPreloadRequestBuilder(item);
       }
@@ -367,7 +366,8 @@ public class ListPreloaderTest {
     }
 
     @Override
-    public RequestBuilder getPreloadRequestBuilder(Object item) {
+    @SuppressWarnings("unchecked")
+    public RequestBuilder<Object> getPreloadRequestBuilder(Object item) {
       return mock(RequestBuilder.class);
     }
 

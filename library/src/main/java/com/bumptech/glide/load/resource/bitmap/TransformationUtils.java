@@ -15,10 +15,9 @@ import android.media.ExifInterface;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
-
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
 import com.bumptech.glide.util.Preconditions;
-
+import com.bumptech.glide.util.Synthetic;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -456,6 +455,10 @@ public final class TransformationUtils {
   }
 
   private static final class NoLock implements Lock {
+
+    @Synthetic
+    NoLock() { }
+
     @Override
     public void lock() {
       // do nothing
